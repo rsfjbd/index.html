@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cracker IPTV Player</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+<style>
+body{margin:0;background:#000;color:#fff;font-family:Arial}
+video{width:100%;height:40vh;background:#000}
+#channels{padding:10px}
+.channel{
+padding:10px;border-bottom:1px solid #333;
+cursor:pointer
+}
+.channel:hover{background:#111}
+</style>
+</head>
+
+<body>
+
+<video id="video" controls autoplay></video>
+<div id="channels">Loading channels...</div>
+
+<script>
+const video=document.getElementById('video');
+const url=new URLSearchParams(location.search).get('m3u');
+
+fetch(url)
+.then(r=>r.text())
+.then(data=>{
+const lines=data.split('\n');
+const box=document.getElementById('channels');
+box.innerHTML='';
+for(let i=0;i<lines.length;i++){
+if(lines[i].startsWith('#EXTINF')){
+const name=lines[i].split(',')[1];
+const link=lines[i+1];
+const d=document.createElement('div');
+d.className='channel';
+d.textContent=name;
+d.onclick=()=>play(link);
+box.appendChild(d);
+}
+}
+});
+
+function play(link){
+if(Hls.isSupported()){
+const hls=new Hls();
+hls.loadSource(link);
+hls.attachMedia(video);
+}else{
+video.src=link;
+}
+}
+</script>
+
+</body>
+</html>
