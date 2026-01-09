@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cracker IPTV</title>
+
+<style>
+body{margin:0;font-family:Arial;background:#f2f2f2}
+header{
+display:flex;justify-content:space-between;align-items:center;
+padding:10px 20px;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.1)
+}
+.site-name{font-size:18px;font-weight:bold}
+.icon{cursor:pointer}
+
+main{padding:20px}
+.search-box,.m3u-input-box{
+max-width:600px;margin:15px auto;display:flex;gap:10px
+}
+.m3u-input-box{display:none}
+
+.m3u-display{
+max-width:600px;margin:15px auto;
+padding:15px;background:#fff;border-radius:8px;
+box-shadow:0 2px 6px rgba(0,0,0,.1);
+cursor:pointer
+}
+.m3u-display:hover{background:#f9f9f9}
+
+.m3u-name{font-size:18px;font-weight:bold}
+.m3u-description{font-size:14px;color:#555}
+
+footer{
+text-align:center;padding:10px;background:#fff
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<img src="https://i.ibb.co/Htv0zYf/1000010471.png" height="40">
+<div class="site-name">Cracker IPTV</div>
+<div class="icon" onclick="toggleM3UInput()">➕</div>
+</header>
+
+<main>
+
+<div class="search-box">
+<input type="text" placeholder="Search playlist...">
+</div>
+
+<div class="m3u-input-box">
+<input id="m3u-input" placeholder="Enter m3u link">
+<button onclick="addM3U()">Add</button>
+</div>
+
+<div id="playlist-container"></div>
+
+</main>
+
+<footer>© 2024 Cracker IPTV</footer>
+
+<script>
+const playlists=[
+{name:"BD Playlist",desc:"Bangladesh Channels",url:"https://raw.githubusercontent.com/rsfjbd/Best-IPTV-/refs/heads/main/Test.m3u"},
+{name:"World Playlist",desc:"World Channels",url:"https://raw.githubusercontent.com/rsfjbd/Best-IPTV-/refs/heads/main/Test.m3u"}
+];
+
+function toggleM3UInput(){
+const box=document.querySelector('.m3u-input-box');
+box.style.display=box.style.display==="flex"?"none":"flex";
+}
+
+function render(){
+const c=document.getElementById('playlist-container');
+c.innerHTML='';
+playlists.forEach(p=>{
+const d=document.createElement('div');
+d.className='m3u-display';
+d.innerHTML=`<div class="m3u-name">${p.name}</div>
+<div class="m3u-description">${p.desc}</div>`;
+d.onclick=()=>location.href=`video.html?m3u=${encodeURIComponent(p.url)}`;
+c.appendChild(d);
+});
+}
+
+function addM3U(){
+const url=document.getElementById('m3u-input').value;
+if(!url)return;
+playlists.push({name:"Custom Playlist",desc:"User added",url});
+render();
+document.getElementById('m3u-input').value='';
+}
+
+render();
+</script>
+
+</body>
+</html>
