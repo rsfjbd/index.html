@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cracker Pro - All in One IPTV</title>
+    <title>Cracker Pro - Perfect UI</title>
     
     <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
@@ -24,7 +24,6 @@
             display: flex; flex-direction: column; min-height: 100vh;
         }
 
-        /* হেডার */
         header {
             display: flex; justify-content: space-between; align-items: center;
             padding: 12px 20px; background: #111; border-bottom: 1px solid #222;
@@ -38,15 +37,12 @@
             display: flex; align-items: center; justify-content: center;
         }
 
-        /* প্লেয়ার সেকশন (চ্যানেল ক্লিক করার আগ পর্যন্ত হাইড থাকবে) */
         #player-section { 
-            display: none; /* শুরুতে বন্ধ */
-            width: 100%; background: #000; 
+            display: none; width: 100%; background: #000; 
             position: sticky; top: 57px; z-index: 1500;
         }
         #player-container { width: 100%; aspect-ratio: 16/9; position: relative; overflow: hidden; }
 
-        /* আধুনিক লোডার */
         #loader-wrapper {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(10px);
@@ -60,10 +56,34 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* লোড হওয়ার সময় কন্ট্রোল হাইড */
         .force-hide-controls .plyr__controls { display: none !important; }
 
-        /* পপআপ বক্স (Manual Playlist) */
+        /* সার্চ বার সেকশন - সেন্টার ফিক্সড */
+        .search-area { 
+            padding: 15px; 
+            background: #0a0a0a;
+            display: flex;
+            justify-content: center;
+        }
+        .search-input {
+            width: 100%; 
+            max-width: 600px;
+            padding: 12px 20px; 
+            border-radius: 30px;
+            border: 1px solid #333; 
+            background: #1a1a1a; 
+            color: white;
+            outline: none; 
+            transition: 0.3s;
+            box-sizing: border-box;
+            text-align: center;
+            font-size: 14px;
+        }
+        .search-input:focus { 
+            border-color: var(--primary-color);
+            background: #222;
+        }
+
         #manual-box {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: #1a1a1a; padding: 20px; border-radius: 12px;
@@ -79,7 +99,6 @@
             border: none; border-radius: 5px; font-weight: bold; cursor: pointer;
         }
 
-        /* ক্যাটাগরি এবং চ্যানেল লিস্ট এরিয়া */
         .content-area { padding: 15px; flex: 1; }
         .category-scroll {
             display: flex; overflow-x: auto; gap: 15px; padding-bottom: 12px;
@@ -90,7 +109,6 @@
 
         .channels-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 
-        /* সাজেস্টেড লোগো ফিক্স */
         .channel-card {
             background: var(--card-bg); border-radius: 12px; padding: 12px 5px;
             text-align: center; cursor: pointer; border: 1px solid #222;
@@ -121,22 +139,26 @@
         </div>
     </section>
 
+    <div class="search-area">
+        <input type="text" class="search-input" id="search-box" placeholder="🔍 Search channel name..." oninput="handleSearch()">
+    </div>
+
     <div id="manual-box">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <span style="font-weight:bold;">Add Custom M3U</span>
             <span onclick="toggleManualBox()" style="cursor:pointer; color:red; font-size:24px;">&times;</span>
         </div>
-        <input type="text" id="m3u-input" placeholder="Paste M3U Link URL...">
+        <input type="text" id="m3u-input" placeholder="Paste URL here...">
         <button onclick="loadManualPlaylist()">LOAD NOW</button>
     </div>
 
     <div class="content-area">
         <div class="category-scroll" id="category-tabs"></div>
-        <div class="channels-grid" id="channels-container">
-            </div>
+        <div class="channels-grid" id="channels-container"></div>
     </div>
 
 <script>
+    // ... (পূর্বের জাভাস্ক্রিপ্ট কোড একই থাকবে) ...
     const DEFAULT_M3U = 'https://raw.githubusercontent.com/rsfjbd/Best-IPTV-/refs/heads/main/Test.m3u';
     const DEFAULT_LOGO = 'https://cdn-icons-png.flaticon.com/512/716/716429.png';
     
@@ -148,10 +170,10 @@
     
     let hls = new Hls();
     let allChannels = [];
+    let currentCategory = 'All';
 
-    // প্লেয়ার ফাংশন
     function playChannel(url) {
-        playerSection.style.display = 'block'; // ক্লিক করলেই প্লেয়ার ওপেন হবে
+        playerSection.style.display = 'block';
         playerContainer.classList.add('force-hide-controls');
         loader.style.display = 'flex';
         window.scrollTo({top: 0, behavior: 'smooth'});
@@ -173,7 +195,6 @@
         }
     }
 
-    // প্লেলিস্ট ফেচ ফাংশন
     function fetchPlaylist(url) {
         fetch(url).then(res => res.text()).then(data => {
             const lines = data.split('\n');
@@ -208,10 +229,14 @@
         if(container.children[0]) container.children[0].classList.add('active');
     }
 
-    function renderChannels(category) {
+    function renderChannels(category, searchTerm = '') {
         const container = document.getElementById('channels-container');
-        const filtered = category === 'All' ? allChannels : allChannels.filter(c => c.group === category);
+        let filtered = category === 'All' ? allChannels : allChannels.filter(c => c.group === category);
         
+        if(searchTerm) {
+            filtered = filtered.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        }
+
         container.innerHTML = filtered.map(ch => `
             <div class="channel-card" onclick="playChannel('${ch.url}')">
                 <img src="${ch.logo}" onerror="this.src='${DEFAULT_LOGO}'">
@@ -221,9 +246,16 @@
     }
 
     function filterCat(el, cat) {
+        currentCategory = cat;
+        document.getElementById('search-box').value = '';
         document.querySelectorAll('.cat-item').forEach(t => t.classList.remove('active'));
         el.classList.add('active');
         renderChannels(cat);
+    }
+
+    function handleSearch() {
+        const term = document.getElementById('search-box').value;
+        renderChannels(currentCategory, term);
     }
 
     function toggleManualBox() {
@@ -233,17 +265,11 @@
 
     function loadManualPlaylist() {
         const url = document.getElementById('m3u-input').value;
-        if(url) { 
-            fetchPlaylist(url); 
-            toggleManualBox(); 
-            playerSection.style.display = 'none'; // নতুন লিস্ট লোড হলে প্লেয়ার বন্ধ হবে
-        }
+        if(url) { fetchPlaylist(url); toggleManualBox(); playerSection.style.display = 'none'; }
     }
 
-    // ইনিশিয়াল লিস্ট লোড
     fetchPlaylist(DEFAULT_M3U);
 
-    // রোটেশন
     player.on('enterfullscreen', () => screen.orientation.lock('landscape').catch(() => {}));
     player.on('exitfullscreen', () => screen.orientation.unlock());
     document.body.addEventListener('click', () => { player.muted = false; }, { once: true });
