@@ -3,84 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cracker Ultra Player</title>
+    <title>Cracker Pro Player - Premium</title>
+    
     <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
-    <style>
-        body { margin: 0; background: #000; color: white; font-family: sans-serif; overflow-x: hidden; }
-        .player-container { display: flex; flex-direction: column; align-items: center; padding-top: 20px; }
-        .video-wrapper { width: 100%; max-width: 900px; position: relative; }
-        
-        /* Ad Section */
-        .ad-box { width: 100%; max-width: 900px; margin: 15px auto; text-align: center; background: #111; padding: 10px; border-radius: 8px; }
-        .ad-label { font-size: 10px; color: #555; margin-bottom: 8px; text-transform: uppercase; }
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
 
-        .info-bar { width: 100%; max-width: 900px; display: flex; justify-content: space-between; align-items: center; padding: 15px; box-sizing: border-box; }
-        .back-btn { background: #e50914; color: white; text-decoration: none; padding: 8px 18px; border-radius: 4px; font-weight: bold; font-size: 14px; }
-        
-        /* Plyr Color Theme */
-        :root { --plyr-color-main: #00d2ff; }
+    <style>
+        :root {
+            --primary-color: #00d2ff;
+            --bg-color: #050505;
+            --card-bg: #151515;
+            --plyr-color-main: #00d2ff;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0; padding: 0; color: white;
+            display: flex; flex-direction: column; min-height: 100vh;
+        }
+
+        /* প্লেয়ার সেকশন */
+        #player-container {
+            width: 100%;
+            background: #000;
+            aspect-ratio: 16/9;
+            position: sticky; top: 0; z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+        }
+
+        /* আধুনিক লোডার */
+        #loader-wrapper {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 100; display: none;
+        }
+
+        .spinner {
+            width: 45px; height: 45px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .hide-controls .plyr__controls { display: none !important; }
+
+        /* সাজেস্টেড চ্যানেল সেকশন */
+        .content-area { padding: 20px; flex: 1; }
+        .section-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .back-home { font-size: 12px; color: var(--primary-color); text-decoration: none; border: 1px solid var(--primary-color); padding: 5px 12px; border-radius: 20px; }
+
+        /* আড়াআড়ি চ্যানেল লিস্ট */
+        .suggested-list {
+            display: flex;
+            overflow-x: auto;
+            gap: 15px;
+            padding-bottom: 15px;
+            scrollbar-width: none; /* Firefox */
+        }
+        .suggested-list::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+        .suggest-card {
+            flex: 0 0 110px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid #222;
+            transition: 0.3s;
+        }
+        .suggest-card:hover { border-color: var(--primary-color); transform: translateY(-3px); }
+        .suggest-card img { width: 45px; height: 45px; border-radius: 50%; margin-bottom: 8px; background: #fff; padding: 3px; }
+        .suggest-card .name { font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* অ্যাড সেকশন */
+        .ad-space { margin-top: 20px; text-align: center; background: #111; padding: 10px; border-radius: 8px; border: 1px dashed #333; }
     </style>
 </head>
 <body>
 
-<div class="player-container">
-    <div class="video-wrapper">
+    <div id="player-container" class="hide-controls">
+        <div id="loader-wrapper">
+            <div class="spinner"></div>
+            <div style="margin-top:15px; font-size:12px; letter-spacing:2px; color:var(--primary-color)">LOADING STREAM</div>
+        </div>
         <video id="player" playsinline controls crossorigin></video>
     </div>
 
-    <div class="ad-box">
-        <div class="ad-label">Sponsored</div>
-        <script async="async" data-cfasync="false" src="https://pl26377079.effectivegatecpm.com/cdeccdd75d3e2e6916a42ce9653cfb08/invoke.js"></script>
-        <div id="container-cdeccdd75d3e2e6916a42ce9653cfb08"></div>
-    </div>
+    <div class="content-area">
+        <div class="section-title">
+            <span>Suggested Channels</span>
+            <a href="index.html" class="back-home">Home Page</a>
+        </div>
 
-    <div class="info-bar">
-        <div id="chanTitle" style="color:#00d2ff">Live Stream</div>
-        <a href="index.html" class="back-btn">Exit Player</a>
-    </div>
-</div>
+        <div class="suggested-list" id="suggested-container">
+            <div style="color:#555">Loading suggestions...</div>
+        </div>
 
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-<script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+        <div class="ad-space">
+            <div style="font-size:10px; color:#444; margin-bottom:5px;">SPONSORED</div>
+            <script async="async" data-cfasync="false" src="https://pl26377079.effectivegatecpm.com/cdeccdd75d3e2e6916a42ce9653cfb08/invoke.js"></script>
+            <div id="container-cdeccdd75d3e2e6916a42ce9653cfb08"></div>
+        </div>
+    </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const source = urlParams.get('m3u');
-        const video = document.getElementById('player');
+    const M3U_URL = 'https://raw.githubusercontent.com/rsfjbd/Best-IPTV-/refs/heads/main/Test.m3u';
+    const video = document.getElementById('player');
+    const loader = document.getElementById('loader-wrapper');
+    const playerContainer = document.getElementById('player-container');
+    const suggestContainer = document.getElementById('suggested-container');
 
-        // Plyr Setup
-        const player = new Plyr(video, {
-            fullscreen: { enabled: true, fallback: true, iosNative: true }
-        });
+    const player = new Plyr(video, { hideControls: true, autoplay: true });
+    let hls = new Hls();
 
-        // 1. অটো রোটেশন লজিক (Fullscreen হলে ল্যান্ডস্কেপ হবে)
-        player.on('enterfullscreen', () => {
-            if (screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock('landscape').catch(err => console.log("Orientation lock failed"));
-            }
-        });
+    // মেইন প্লে ফাংশন
+    function playStream(url) {
+        playerContainer.classList.add('hide-controls');
+        loader.style.display = 'flex';
 
-        player.on('exitfullscreen', () => {
-            if (screen.orientation && screen.orientation.unlock) {
-                screen.orientation.unlock();
-            }
-        });
-
-        // 2. HLS Stream Loading
-        if (source) {
-            if (Hls.isSupported()) {
-                const hls = new Hls();
-                hls.loadSource(source);
-                hls.attachMedia(video);
-            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                video.src = source;
-            }
+        if (Hls.isSupported()) {
+            hls.destroy();
+            hls = new Hls();
+            hls.loadSource(url);
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                video.play();
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    playerContainer.classList.remove('hide-controls');
+                }, 800);
+            });
         }
+    }
 
-        player.on('ready', () => player.play().catch(() => {}));
+    // URL থেকে সোর্স নিয়ে প্লে করা
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialUrl = urlParams.get('m3u');
+    if (initialUrl) playStream(initialUrl);
+
+    // M3U থেকে চ্যানেল নিয়ে সাজেশন তৈরি করা
+    fetch(M3U_URL).then(res => res.text()).then(data => {
+        const lines = data.split('\n');
+        let channels = [];
+        let currentChan = {};
+
+        lines.forEach(line => {
+            if (line.startsWith('#EXTINF')) {
+                const name = line.split(',')[1] || "Unknown";
+                const logo = line.match(/tvg-logo="([^"]*)"/)?.[1] || "";
+                currentChan = { name, logo };
+            } else if (line.trim().startsWith('http')) {
+                currentChan.url = line.trim();
+                channels.push(currentChan);
+                currentChan = {};
+            }
+        });
+
+        // শাফেল করে ৫-১০টি র্যান্ডম চ্যানেল দেখানো
+        const shuffled = channels.sort(() => 0.5 - Math.random()).slice(0, 12);
+        
+        suggestContainer.innerHTML = shuffled.map(ch => `
+            <div class="suggest-card" onclick="playStream('${ch.url}')">
+                <img src="${ch.logo}" onerror="this.src='https://via.placeholder.com/45'">
+                <div class="name">${ch.name}</div>
+            </div>
+        `).join('');
     });
-</script>
 
+    // ফুলস্ক্রিন ও রোটেশন
+    player.on('enterfullscreen', () => screen.orientation.lock('landscape').catch(() => {}));
+    player.on('exitfullscreen', () => screen.orientation.unlock());
+
+</script>
 </body>
 </html>
