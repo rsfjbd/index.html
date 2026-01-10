@@ -5,98 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cracker IPTV Pro</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f0f2f5; }
-        header { display: flex; justify-content: space-between; align-items: center; background-color: #1a1a1a; padding: 15px 25px; color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
-        .logo-section { display: flex; align-items: center; gap: 10px; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; background-color: #0f0f0f; color: white; }
+        header { display: flex; justify-content: space-between; align-items: center; background-color: #1a1a1a; padding: 15px 25px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
         .site-name { font-size: 22px; font-weight: bold; color: #00d2ff; }
         
         main { padding: 20px; max-width: 1200px; margin: auto; }
-        .search-box { display: flex; gap: 10px; margin-bottom: 25px; position: sticky; top: 10px; z-index: 100; }
-        .search-box input { flex: 1; padding: 12px; border: none; border-radius: 25px; box-shadow: 0 2px 15px rgba(0,0,0,0.1); outline: none; }
+        .search-box { margin-bottom: 20px; }
+        .search-box input { width: 100%; padding: 12px 20px; border: none; border-radius: 25px; background: #2a2a2a; color: white; outline: none; font-size: 16px; box-sizing: border-box; }
         
-        .m3u-input-box { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: none; flex-direction: column; gap: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .m3u-input-box input { padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
-        .btn-add { background: #28a745; color: white; border: none; padding: 10px; cursor: pointer; border-radius: 5px; }
-
-        .channel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
-        .channel-card { background: white; border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; transition: 0.3s; border: 1px solid #eee; overflow: hidden; }
-        .channel-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-color: #00d2ff; }
-        .channel-card img { width: 60px; height: 60px; object-fit: contain; margin-bottom: 10px; background: #f9f9f9; border-radius: 50%; padding: 5px; }
-        .channel-name { font-size: 14px; font-weight: 600; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .channel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
+        .channel-card { background: #1e1e1e; border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; transition: 0.3s; border: 1px solid #333; }
+        .channel-card:hover { transform: translateY(-5px); background: #252525; border-color: #00d2ff; }
+        .channel-card img { width: 60px; height: 60px; object-fit: contain; margin-bottom: 10px; border-radius: 8px; }
+        .channel-name { font-size: 13px; font-weight: 500; height: 32px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
         
-        footer { text-align: center; padding: 20px; color: #666; font-size: 14px; }
-        .loader { display: none; text-align: center; margin: 20px; font-weight: bold; color: #007bff; }
+        #loader { text-align: center; margin: 50px; font-size: 18px; color: #00d2ff; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo-section">
-        <img src="https://i.ibb.co/Htv0zYf/1000010471.png" alt="Logo" style="height: 35px;">
-        <div class="site-name">Cracker IPTV</div>
-    </div>
-    <div onclick="toggleInput()" style="cursor:pointer">
-        <svg width="28" height="28" fill="white" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-    </div>
+    <div class="site-name">Cracker IPTV</div>
+    <div id="count" style="font-size: 14px; color: #888;">Loading...</div>
 </header>
 
 <main>
-    <div class="m3u-input-box" id="inputBox">
-        <input type="text" id="m3uUrl" placeholder="Paste M3U Link here (1000+ channels support)">
-        <button class="btn-add" onclick="processM3U()">Load All Channels</button>
-    </div>
-
     <div class="search-box">
         <input type="text" id="searchInput" placeholder="Search from 1000+ channels..." onkeyup="filterChannels()">
     </div>
 
-    <div id="loader" class="loader">Processing channels... Please wait.</div>
+    <div id="loader">Channels are loading... Please wait.</div>
     <div class="channel-grid" id="channelGrid"></div>
 </main>
 
-<footer>
-    <p>© 2026 Cracker IPTV - Ultimate Streaming</p>
-</footer>
-
 <script>
     let allChannels = [];
+    // এখানে ১০০০+ চ্যানেলের গ্লোবাল লিঙ্কটি দেওয়া হয়েছে
+    const M3U_URL = "https://iptv-org.github.io/iptv/index.m3u";
 
-    function toggleInput() {
-        const box = document.getElementById('inputBox');
-        box.style.display = box.style.display === 'flex' ? 'none' : 'flex';
-    }
-
-    async function processM3U() {
-        const url = document.getElementById('m3uUrl').value;
-        if (!url) return alert("Please paste a link!");
-
-        document.getElementById('loader').style.display = 'block';
-        document.getElementById('channelGrid').innerHTML = '';
-
+    window.onload = async function() {
         try {
-            const response = await fetch(url);
+            const response = await fetch(M3U_URL);
             const data = await response.text();
             parseM3U(data);
         } catch (error) {
-            alert("Error loading M3U. Check CORS or Link!");
-            console.error(error);
+            document.getElementById('loader').innerText = "Failed to load channels. Please refresh.";
         }
-        document.getElementById('loader').style.display = 'none';
-    }
+    };
 
     function parseM3U(content) {
         const lines = content.split('\n');
-        allChannels = [];
-        
         for (let i = 0; i < lines.length; i++) {
             if (lines[i].startsWith('#EXTINF:')) {
                 const info = lines[i];
                 const streamUrl = lines[i + 1]?.trim();
                 
                 if (streamUrl && streamUrl.startsWith('http')) {
-                    // Extract Name
-                    const name = info.split(',').pop().trim() || "Unknown Channel";
-                    // Extract Logo
+                    const name = info.split(',').pop().trim() || "Unknown";
                     const logoMatch = info.match(/tvg-logo="([^"]+)"/);
                     const logo = logoMatch ? logoMatch[1] : 'https://cdn-icons-png.flaticon.com/512/716/716429.png';
                     
@@ -104,6 +69,8 @@
                 }
             }
         }
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('count').innerText = allChannels.length + " Channels Found";
         renderChannels(allChannels);
     }
 
