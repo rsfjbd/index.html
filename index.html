@@ -3,96 +3,250 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cracker IPTV Pro</title>
+    <title>Cracker Pro - All in One IPTV</title>
+    
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; background-color: #0f0f0f; color: white; }
-        header { display: flex; justify-content: space-between; align-items: center; background-color: #1a1a1a; padding: 15px 25px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        .site-name { font-size: 22px; font-weight: bold; color: #00d2ff; }
-        
-        main { padding: 20px; max-width: 1200px; margin: auto; }
-        .search-box { margin-bottom: 20px; }
-        .search-box input { width: 100%; padding: 12px 20px; border: none; border-radius: 25px; background: #2a2a2a; color: white; outline: none; font-size: 16px; box-sizing: border-box; }
-        
-        .channel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
-        .channel-card { background: #1e1e1e; border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; transition: 0.3s; border: 1px solid #333; }
-        .channel-card:hover { transform: translateY(-5px); background: #252525; border-color: #00d2ff; }
-        .channel-card img { width: 60px; height: 60px; object-fit: contain; margin-bottom: 10px; border-radius: 8px; }
-        .channel-name { font-size: 13px; font-weight: 500; height: 32px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-        
-        #loader { text-align: center; margin: 50px; font-size: 18px; color: #00d2ff; }
+        :root {
+            --primary-color: #00d2ff;
+            --bg-color: #050505;
+            --card-bg: #111;
+            --plyr-color-main: #00d2ff;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0; padding: 0; color: white;
+            display: flex; flex-direction: column; min-height: 100vh;
+        }
+
+        /* হেডার */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 20px; background: #111; border-bottom: 1px solid #222;
+            position: sticky; top: 0; z-index: 2000;
+        }
+        .logo-text { font-size: 18px; font-weight: bold; color: var(--primary-color); }
+        .add-btn {
+            background: none; border: 2px solid var(--primary-color);
+            color: var(--primary-color); width: 32px; height: 32px;
+            border-radius: 50%; font-size: 20px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* প্লেয়ার সেকশন (চ্যানেল ক্লিক করার আগ পর্যন্ত হাইড থাকবে) */
+        #player-section { 
+            display: none; /* শুরুতে বন্ধ */
+            width: 100%; background: #000; 
+            position: sticky; top: 57px; z-index: 1500;
+        }
+        #player-container { width: 100%; aspect-ratio: 16/9; position: relative; overflow: hidden; }
+
+        /* আধুনিক লোডার */
+        #loader-wrapper {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(10px);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 100; display: none;
+        }
+        .spinner {
+            width: 45px; height: 45px; border: 5px solid rgba(255, 255, 255, 0.1);
+            border-top: 5px solid var(--primary-color); border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* লোড হওয়ার সময় কন্ট্রোল হাইড */
+        .force-hide-controls .plyr__controls { display: none !important; }
+
+        /* পপআপ বক্স (Manual Playlist) */
+        #manual-box {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #1a1a1a; padding: 20px; border-radius: 12px;
+            border: 1px solid var(--primary-color); z-index: 3000; display: none;
+            width: 85%; max-width: 400px;
+        }
+        #manual-box input {
+            width: 100%; padding: 12px; margin: 15px 0; border-radius: 5px;
+            border: 1px solid #333; background: #000; color: white; box-sizing: border-box;
+        }
+        #manual-box button {
+            width: 100%; padding: 10px; background: var(--primary-color);
+            border: none; border-radius: 5px; font-weight: bold; cursor: pointer;
+        }
+
+        /* ক্যাটাগরি এবং চ্যানেল লিস্ট এরিয়া */
+        .content-area { padding: 15px; flex: 1; }
+        .category-scroll {
+            display: flex; overflow-x: auto; gap: 15px; padding-bottom: 12px;
+            scrollbar-width: none; border-bottom: 1px solid #222; margin-bottom: 15px;
+        }
+        .cat-item { cursor: pointer; color: #888; white-space: nowrap; font-size: 14px; font-weight: 500; }
+        .cat-item.active { color: var(--primary-color); border-bottom: 2px solid var(--primary-color); padding-bottom: 5px; }
+
+        .channels-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+        /* সাজেস্টেড লোগো ফিক্স */
+        .channel-card {
+            background: var(--card-bg); border-radius: 12px; padding: 12px 5px;
+            text-align: center; cursor: pointer; border: 1px solid #222;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 105px; transition: 0.2s;
+        }
+        .channel-card img {
+            width: 50px; height: 50px; border-radius: 8px;
+            object-fit: contain; background: #fff; margin-bottom: 8px; padding: 4px;
+        }
+        .channel-card .name { font-size: 10px; font-weight: 600; color: #eee; line-height: 1.2; text-overflow: ellipsis; overflow: hidden; }
     </style>
 </head>
 <body>
 
-<header>
-    <div class="site-name">Cracker IPTV</div>
-    <div id="count" style="font-size: 14px; color: #888;">Loading...</div>
-</header>
+    <header>
+        <div class="logo-text">CRACKER PRO</div>
+        <button class="add-btn" onclick="toggleManualBox()">+</button>
+    </header>
 
-<main>
-    <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Search from 1000+ channels..." onkeyup="filterChannels()">
+    <section id="player-section">
+        <div id="player-container" class="force-hide-controls">
+            <div id="loader-wrapper">
+                <div class="spinner"></div>
+                <div style="margin-top:12px; font-size:12px; color:var(--primary-color); font-weight: bold;">LOADING STREAM...</div>
+            </div>
+            <video id="player" playsinline controls></video>
+        </div>
+    </section>
+
+    <div id="manual-box">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:bold;">Add Custom M3U</span>
+            <span onclick="toggleManualBox()" style="cursor:pointer; color:red; font-size:24px;">&times;</span>
+        </div>
+        <input type="text" id="m3u-input" placeholder="Paste M3U Link URL...">
+        <button onclick="loadManualPlaylist()">LOAD NOW</button>
     </div>
 
-    <div id="loader">Channels are loading... Please wait.</div>
-    <div class="channel-grid" id="channelGrid"></div>
-</main>
+    <div class="content-area">
+        <div class="category-scroll" id="category-tabs"></div>
+        <div class="channels-grid" id="channels-container">
+            </div>
+    </div>
 
 <script>
+    const DEFAULT_M3U = 'https://raw.githubusercontent.com/rsfjbd/Best-IPTV-/refs/heads/main/Test.m3u';
+    const DEFAULT_LOGO = 'https://cdn-icons-png.flaticon.com/512/716/716429.png';
+    
+    const video = document.getElementById('player');
+    const loader = document.getElementById('loader-wrapper');
+    const playerSection = document.getElementById('player-section');
+    const playerContainer = document.getElementById('player-container');
+    const player = new Plyr(video, { hideControls: true, autoplay: true, muted: true });
+    
+    let hls = new Hls();
     let allChannels = [];
-    // এখানে ১০০০+ চ্যানেলের গ্লোবাল লিঙ্কটি দেওয়া হয়েছে
-    const M3U_URL = "https://raw.githubusercontent.com/rsfjbd/Best-IPTV-/refs/heads/main/Test.m3u";
 
-    window.onload = async function() {
-        try {
-            const response = await fetch(M3U_URL);
-            const data = await response.text();
-            parseM3U(data);
-        } catch (error) {
-            document.getElementById('loader').innerText = "Failed to load channels. Please refresh.";
-        }
-    };
+    // প্লেয়ার ফাংশন
+    function playChannel(url) {
+        playerSection.style.display = 'block'; // ক্লিক করলেই প্লেয়ার ওপেন হবে
+        playerContainer.classList.add('force-hide-controls');
+        loader.style.display = 'flex';
+        window.scrollTo({top: 0, behavior: 'smooth'});
 
-    function parseM3U(content) {
-        const lines = content.split('\n');
-        for (let i = 0; i < lines.length; i++) {
-            if (lines[i].startsWith('#EXTINF:')) {
-                const info = lines[i];
-                const streamUrl = lines[i + 1]?.trim();
-                
-                if (streamUrl && streamUrl.startsWith('http')) {
-                    const name = info.split(',').pop().trim() || "Unknown";
-                    const logoMatch = info.match(/tvg-logo="([^"]+)"/);
-                    const logo = logoMatch ? logoMatch[1] : 'https://cdn-icons-png.flaticon.com/512/716/716429.png';
-                    
-                    allChannels.push({ name, logo, url: streamUrl });
-                }
-            }
+        if (Hls.isSupported()) {
+            hls.destroy();
+            hls = new Hls();
+            hls.loadSource(url);
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                video.play();
+                video.onplaying = () => {
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                        playerContainer.classList.remove('force-hide-controls');
+                    }, 1000);
+                };
+            });
         }
-        document.getElementById('loader').style.display = 'none';
-        document.getElementById('count').innerText = allChannels.length + " Channels Found";
-        renderChannels(allChannels);
     }
 
-    function renderChannels(channels) {
-        const grid = document.getElementById('channelGrid');
-        grid.innerHTML = channels.map(chan => `
-            <div class="channel-card" onclick="playChannel('${chan.url}')">
-                <img src="${chan.logo}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/716/716429.png'">
-                <div class="channel-name">${chan.name}</div>
+    // প্লেলিস্ট ফেচ ফাংশন
+    function fetchPlaylist(url) {
+        fetch(url).then(res => res.text()).then(data => {
+            const lines = data.split('\n');
+            allChannels = [];
+            let current = {};
+            let categories = new Set(['All']);
+
+            lines.forEach(line => {
+                if (line.startsWith('#EXTINF')) {
+                    const group = line.match(/group-title="([^"]*)"/)?.[1] || "Others";
+                    current = { 
+                        name: line.split(',')[1] || "Unknown", 
+                        logo: line.match(/tvg-logo="([^"]*)"/)?.[1] || DEFAULT_LOGO,
+                        group: group
+                    };
+                    categories.add(group);
+                } else if (line.trim().startsWith('http')) {
+                    current.url = line.trim();
+                    allChannels.push(current);
+                    current = {};
+                }
+            });
+
+            renderCategories(Array.from(categories));
+            renderChannels('All');
+        });
+    }
+
+    function renderCategories(cats) {
+        const container = document.getElementById('category-tabs');
+        container.innerHTML = cats.map(cat => `<div class="cat-item" onclick="filterCat(this, '${cat}')">${cat}</div>`).join('');
+        if(container.children[0]) container.children[0].classList.add('active');
+    }
+
+    function renderChannels(category) {
+        const container = document.getElementById('channels-container');
+        const filtered = category === 'All' ? allChannels : allChannels.filter(c => c.group === category);
+        
+        container.innerHTML = filtered.map(ch => `
+            <div class="channel-card" onclick="playChannel('${ch.url}')">
+                <img src="${ch.logo}" onerror="this.src='${DEFAULT_LOGO}'">
+                <div class="name">${ch.name}</div>
             </div>
         `).join('');
     }
 
-    function filterChannels() {
-        const query = document.getElementById('searchInput').value.toLowerCase();
-        const filtered = allChannels.filter(c => c.name.toLowerCase().includes(query));
-        renderChannels(filtered);
+    function filterCat(el, cat) {
+        document.querySelectorAll('.cat-item').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        renderChannels(cat);
     }
 
-    function playChannel(url) {
-        window.location.href = `video.html?m3u=${encodeURIComponent(url)}`;
+    function toggleManualBox() {
+        const box = document.getElementById('manual-box');
+        box.style.display = box.style.display === 'block' ? 'none' : 'block';
     }
+
+    function loadManualPlaylist() {
+        const url = document.getElementById('m3u-input').value;
+        if(url) { 
+            fetchPlaylist(url); 
+            toggleManualBox(); 
+            playerSection.style.display = 'none'; // নতুন লিস্ট লোড হলে প্লেয়ার বন্ধ হবে
+        }
+    }
+
+    // ইনিশিয়াল লিস্ট লোড
+    fetchPlaylist(DEFAULT_M3U);
+
+    // রোটেশন
+    player.on('enterfullscreen', () => screen.orientation.lock('landscape').catch(() => {}));
+    player.on('exitfullscreen', () => screen.orientation.unlock());
+    document.body.addEventListener('click', () => { player.muted = false; }, { once: true });
 </script>
 </body>
 </html>
