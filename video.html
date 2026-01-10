@@ -1,61 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Cracker IPTV Player</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-
-<style>
-body{margin:0;background:#000;color:#fff;font-family:Arial}
-video{width:100%;height:40vh;background:#000}
-#channels{padding:10px}
-.channel{
-padding:10px;border-bottom:1px solid #333;
-cursor:pointer
-}
-.channel:hover{background:#111}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cracker Pro Player</title>
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <style>
+        body { 
+            margin: 0; 
+            background-color: #000; 
+            font-family: 'Segoe UI', sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            color: white;
+        }
+        .player-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle, #1a1a1a 0%, #000 100%);
+            width: 100%;
+        }
+        .video-wrapper {
+            width: 100%;
+            max-width: 1000px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .controls-info {
+            padding: 20px;
+            background: #111;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #333;
+        }
+        .back-btn {
+            background: #e50914; /* Netflix Red */
+            color: white;
+            text-decoration: none;
+            padding: 10px 25px;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .back-btn:hover {
+            background: #ff1f2d;
+            transform: scale(1.05);
+        }
+        .channel-title {
+            font-size: 18px;
+            color: #00d2ff;
+        }
+        /* Plyr custom color override */
+        :root { --plyr-color-main: #00d2ff; }
+    </style>
 </head>
-
 <body>
 
-<video id="video" controls autoplay></video>
-<div id="channels">Loading channels...</div>
+<div class="player-container">
+    <div class="video-wrapper">
+        <video id="player" playsinline controls></video>
+    </div>
+</div>
+
+<div class="controls-info">
+    <div class="channel-title" id="chanName">Live Stream</div>
+    <a href="index.html" class="back-btn">Back to Channels</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
 
 <script>
-const video=document.getElementById('video');
-const url=new URLSearchParams(location.search).get('m3u');
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const source = urlParams.get('m3u');
+        const video = document.querySelector('video');
+        const chanNameDisplay = document.getElementById('chanName');
 
-fetch(url)
-.then(r=>r.text())
-.then(data=>{
-const lines=data.split('\n');
-const box=document.getElementById('channels');
-box.innerHTML='';
-for(let i=0;i<lines.length;i++){
-if(lines[i].startsWith('#EXTINF')){
-const name=lines[i].split(',')[1];
-const link=lines[i+1];
-const d=document.createElement('div');
-d.className='channel';
-d.textContent=name;
-d.onclick=()=>play(link);
-box.appendChild(d);
-}
-}
-});
+        // উন্নত প্লেয়ার কনফিগারেশন
+        const player = new Plyr(video, {
+            captions: { active: true, update: true, language: 'en' },
+            quality: { default: 576, options: [4320, 2880, 2160, 1440, 1080, 720, 576, 480, 360, 240] }
+        });
 
-function play(link){
-if(Hls.isSupported()){
-const hls=new Hls();
-hls.loadSource(link);
-hls.attachMedia(video);
-}else{
-video.src=link;
-}
-}
+        if (!source) {
+            chanNameDisplay.innerText = "Error: No Link Found";
+            return;
+        }
+
+        if (Hls.isSupported()) {
+            const hls = new Hls();
+            hls.loadSource(source);
+            hls.attachMedia(video);
+            window.hls = hls;
+        } 
+        else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = source;
+        }
+
+        // অটো-প্লে চেষ্টা
+        player.on('ready', () => {
+            player.play().catch(() => {
+                console.log("User interaction required for autoplay");
+            });
+        });
+    });
 </script>
 
 </body>
